@@ -1,0 +1,46 @@
+install.packages("scatterplot3d")
+install.packages("rgl")
+library(scatterplot3d)
+library(Rtsne)
+library(Seurat)
+
+gecko252<- RunTSNE(combined, reduction.use = "tsne", dims.use = 1:6, dim.embed = 3)
+
+
+
+DimPlot(object = gecko252, reduction.use = "tsne", dim.1 = 1, dim.2 = 3)
+tSNE_1 <- gecko252[["tsne"]]@cell.embeddings[,1]
+tSNE_2 <- gecko252[["tsne"]]@cell.embeddings[,2]
+tSNE_3 <- gecko252[["tsne"]]@cell.embeddings[,3]
+
+
+
+gecko252 <- SetIdent(object = gecko252, cells = WhichCells(gecko252, expression = PITX2>1), value = '1')
+gecko252 <- SetIdent(object = gecko252, cells = WhichCells(gecko252, expression = PITX2<=1), value = '2')
+TSNEPlot(gecko252)
+FeaturePlot(gecko252, features = "PITX2")
+levels(gecko252)
+Idents(gecko252)
+color_scheme <- as.numeric(1:2)[Idents(gecko252)]
+for(i in 1:2){
+  if(color_scheme[i] == 1){
+    color_scheme[i] <- "#F8766D"
+  }else if(color_scheme[i] == 2){
+    color_scheme[i] <- "#E38900"
+  }else{NULL}
+}
+
+library(rgl)
+open3d()
+plot3d(x = tSNE_1, y = tSNE_2, z = tSNE_3,
+       col = color_scheme,
+       type = "s", size = 0.3, box = FALSE)
+M <- par3d("userMatrix")
+if (!rgl.useNULL())
+  play3d( par3dinterp(time = (0:2)*0.75, userMatrix = list(M,
+                                                           rotate3d(M, pi/2, 1, 0, 0),
+                                                           rotate3d(M, pi/2, 0, 1, 0) ) ), 
+          duration = 3 )
+a<-movie3d( spin3d(), duration = 5, dir = getwd())
+a <-file.path("C:/Users/ideapad 710s plus i7/Desktop/courses/tSNE_3dplot.html")#save as html
+rstudioapi::viewer(a) 
